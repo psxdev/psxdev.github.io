@@ -1,0 +1,726 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/core.css" />
+		<link rel="stylesheet" type="text/css" href="css/prism.css" />
+		<title>Luke No... I am PlayStation Camera, part 1- Introduction to PlayStation Camera</title>
+	</head>
+	
+	<body>
+		<div class="page">
+			<div class="container">
+				<div class="header">
+					<a href="about.html" class="header-element">
+						About me
+					</a>
+					
+					<a href="stuff.html" class="header-element">
+						Stuff
+					</a>
+					
+					<a href="index.html" class="header-element">
+						Home
+					</a>
+				</div>
+				
+				<h1>Luke No... I am PlayStation Camera, part 1</h1>
+				<h2>Introduction to PlayStation Camera</h2>
+				
+				<hr>
+				
+				<p>
+					<b>Note</b>: This article will be part of PlayStation Camera article series in near future:
+				</p>
+				
+				<ul>
+					<li><b><a href="luke.html">Luke No... I am PlayStation Camera, part 1 - Introduction to PlayStation Camera</a></b></li>
+				</ul>
+				
+				<p>
+					See also for historical purposes. All was done at that time in user land, and with usb traffic sniffer:
+					<ul>
+						<li> <a href="http://bigboss-eyetoy.blogspot.com/2015/02/reversing-playstation-4-camera.html"> Reversing PlayStation 4 Camera</a></li>
+						<li> <a href="http://bigboss-eyetoy.blogspot.com/2015/08/reversing-scelibcamera.html">Reversing sceLibCamera </a></li>
+					</ul>
+						
+				</p>
+				
+				<br>
+				
+				<h2>Brief History</h2>
+				
+				<p>
+					Do you remember E3 presentations with Dr Richard Marks and Phill Harrison in 2003 and 2005 with the infamous ruber duck and EyeToy? It was amazing. It was the first time you saw AR stuff in a game console. 
+				</p>
+				<p>
+					I made my first usb driver for PlayStation 2 platform. It was a full IOP module replacement for original Sony EyeToy driver, streaming ipu frames and full audio support reversing the original ov519.irx module in 2004. It was done using ps2dis, a pencil and notebook(no Ida then a piece of paper with a assembler list and my brain XD old school you know). I took a sabbatical year from my work for personal matters and I learnt a lot about usb specticification, and a deep knowledge about chips inside Sony PlayStation 2(ee,iop,dmac,ipu,gs,vu). It was a  very fun year indeed.
+				</p>
+				<p>
+					It was my first contact with Omnivsion, usb bridge asics and cmos sensors, and since then i have made reverse engineering of all Omnivision chips that Sony have been using. Sony have been making incredible and very cheap camera devices since 2003 (EyeToy, PlayStation Eye and PlayStation Camera) and thanks to that i had a lot of fun reversing them. That feeling when you get the first frame from a camera device with no internal information about their chips is incredible. Without challenge there is not fun at all :P.
+				</p>
+				
+				<h2>PlayStation Camera</h2>
+			
+				
+				<p>
+					There are 2 Playstation Camera models:
+				</p>
+				<p>
+					<ul>
+						<p><li>Model CUH-ZEY1 was released on december 2013 <div class="quote-reference">
+											- <a href="https://www.businessinsider.com/ps4-camera-unboxed-2013-11?IR=T">BusinessInsider news article 2013</a>
+						</div></li>
+						<p><li>Model CUH-ZEY2 was released on September 15th 2016 <div class="quote-reference">
+											- <a href="https://www.polygon.com/2016/9/7/12839702/playstation-camera-re-design">Polygon news article 2016</a>
+						</div></li>
+					</ul>
+				</p>
+				<p>
+					I began my research in december 2013 just after bought it. It was using a propietary connector called AUX, Erik Wilson figured out that AUX was only an usb3 connector made by Sony so we tryed to get, with man in the middle approach, with a beagle usb 3 sniffer the traffic between the PlayStation 4 and PlayStation Camera. 
+				</p>
+				
+				<p> After that,we analyzed all usb 3 traffic and we figured out that device was in boot mode waiting for firmware. We extracted the firmware from the usb traffic and after that i got all initialization done under osx on March 2014.
+				</p>
+				
+				
+				<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">First streaming video test with ps4eye camera isoc part done! ! . I must improve yuyv to rgb ugly code <a href="http://t.co/bF92YKiqXJ"></a>
+</p>&mdash; psxdev (@psxdev) <a href="https://twitter.com/psxdev/status/439787015606136833">March 1, 2014</a></blockquote>	
+					<script async src="http://platform.twitter.com/widgets.js" charset="utf-8"></script>
+				
+				
+				<p>
+					I released later a PS4EYECam driver using libusb for MacOS. Some people and researcher have been working with it porting to linux but windows has not a good support for libusb and it is difficult to get it up and running in an easy way, that zadig thing is a pain in the ass. There is other option for windows using Windows Media Framework after loading the firmware to device but firmware used is from our usb sniffer capture from kernel lower than 1.76 and it is veeery old.	
+				</p>
+				
+				<p> I know that some researchers have been testing and looking for PlayStation Camera integration with PlayStation VR on pc and someone ask me if i could come back and work again in a proper driver for PlayStation Camera for Windows. I will try to get it up and running but i can share all my research from these years about it at low level in kernel land just now. 
+				
+				</p>
+				
+				<p>
+					So let's go!!!! Luke... 
+				</p>	
+				<div class="center">
+				<img src="assets/lukememe.jpg">
+				</div>
+				
+				
+				<br>
+				<br>
+				
+				<h2>Luke aka PlayStation Camera kernel driver for Orbis</h2>
+				
+				<p>
+					PlayStation 4 Operating System is based on Freebsd 9 and it is called Orbis. Like all operating systems it has drivers for many devices. 
+				</p>
+				<p>
+					PlayStation Camera is an usb 3 camera device with a propietary connector called AUX. It is managed by a kernel driver called Luke. It is like all kernel drivers for devices that you can see in a vanilla Freebsd Kernel. User land applications or games are using a library called libSceCamera.sprx and that library speaks with Luke using ioctl calls.
+				</p> 
+				</p>
+					Recommended lecture for newbies "FreeBSD Device Drivers: A Guide for the Intrepid" by Joseph Kong.
+				</p>
+				<p>
+					So do you want to have a lot of fun reversing code from PlayStation 4 Kernel? Always :P.
+					
+				</p>
+				
+				<br>
+				
+				<h2>luke_probe</h2>
+				
+				<p>
+					The first surprise, first versions of PlayStation Kernels let to use PlayStation Camera from AUX port and USB ports. Sony fixed that on firmware 1.75, i have not Kernel between 1.62 and 1.75 so only i can confirm that 1.62 still can use PlayStation Camera from front usb ports in the PlayStation 4. Initial Kernels only support first camera model. 
+				</p>
+				<p> Second surprise there are two firmwares embed on Kernel for PlayStation Camera, one of them it is the same in all Kernels it is for a special UAC mode, the other one the UVC mode has different revisions but we will speak about that later don't worry take it easy.
+				</p>
+				
+				<p>Code from Kernel 5.05:
+				<pre><code class="language-c">int luke_probe(device_t dev)
+{
+	struct usb_attach_arg *uaa = device_get_ivars(dev);
+	int result=ENXIO;//6
+	usb_device_descriptor *device;
+	if(uaa!=NULL)
+	{
+		if(uaa->usb_mode!=0)
+		{
+			device=usbd_get_device_descriptor(uaa->device);
+			if(device->idVendor==0x05a9)
+			{
+				if(device->idProduct-0x580>0xb)
+				{
+					return result;
+				}
+				if(device->idProduct!=0x58a && device->idProduct!=0x58b && device->idProduct!=0x580)
+				{
+					return result;
+				}
+				//uacmoode is 0 you can set to 1 with ioctl 0xC0088E09 called from libSceCamera.sprx
+				if(uacmode==1 && device->idProduct&0xFFFE==0x58A )
+    			{
+      				printf("camera driver return ENXIO in probe for UAC\n");
+      				return ENXIO;
+    			}
+				result=0;
+        		uint8_t index=usbd_get_bus_index(uaa->device);
+        		if(index!=2)
+        		{
+          			printf("PlayStation(R)Camera is supporting only AUX Port. index:%x\n",index);
+          			return ENXIO;
+          		}
+        		
+			}
+		}
+	}
+	return result;
+}
+
+				</code></pre>
+				</p>
+				
+				<br>
+				
+				<h2>luke_attach</h2>
+				<p>
+					This function has a place where the size of 2 kind of PlayStation Camera firmwares is hardcoded , you can easily find the place in each Kernel looking for "camera attach: UAC mode!\n"
+				</p>
+				For 5.05:
+				<pre><code>	
+loc_67D801:                             
+or      byte ptr cs:dword_27A80C0, 1
+cmp     uacmode, 0
+mov     cs:dword_27A8034, 140000h
+jz      short loc_67D830
+lea     rdi, aCameraAttachUa ; "camera attach: UAC mode!\n"
+xor     eax, eax
+call    printf
+mov     eax, 64036
+jmp     short loc_67D835
+loc_67D830:                             
+mov     eax, 67924
+loc_67D835:                             
+mov     firmwareSize, eax
+				</code></pre>
+				<p>
+					So uacmode firmware size in 5.05 is 64036 bytes. We will see later that that mode have the same size and same content for all firmwares.
+				</p>
+				<p>
+					The other one have size of 67924 bytes in 5.05. This one change for each new PlayStation Camera firmware revision. 
+				</p>
+				<p>
+					This function will check if device is in boot mode to prepare transfer that in usb callback will call finally to luke_fw_cb funtion that will load the firmware. 
+				</p>
+				<br>
+				
+				<h2>luke_fw_cb</h2>
+				<p>
+					This function have the information about where is each firmware. UAC firmware is the same for all kernels, UVC firmware has different revisions.
+				</p>
+				<p>3.55 is the first firmware i have that it supports second PlayStation Camera model. You can confirm that in luke_probe function easily.
+				<p>
+				<p>
+					Table with retail firmware versions, offset in kernel, size in bytes of PlayStation Camera firmware, name if it is present on kernel, md5, and type of fimware UAC or UVC. 
+				</p>
+				<style type="text/css">
+				.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;margin-left: auto;
+margin-right: auto;}
+				.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}
+				.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD;}
+				.tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top;}
+				</style>
+				<table class="tg">
+				  <tr>
+				    <th class="tg-c3ow">firmware</th>
+				    <th class="tg-c3ow">offset</th>
+				    <th class="tg-c3ow">size</th>
+				    <th class="tg-c3ow">kernel name</th>
+				    <th class="tg-c3ow">md5</th>
+				    <th class="tg-c3ow">type</th>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.01</td>
+				    <td class="tg-c3ow">84C4C0</td>
+				    <td class="tg-c3ow">66576</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">3a6ff06e3ff57615c4019b0a5c2e47ca</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.01</td>
+				    <td class="tg-c3ow">85C8E0</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.05</td>
+				    <td class="tg-c3ow">7204C0</td>
+				    <td class="tg-c3ow">66576</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">3a6ff06e3ff57615c4019b0a5c2e47ca</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.05</td>
+				    <td class="tg-c3ow">7308E0</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.50b</td>
+				    <td class="tg-c3ow">738530</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.50b</td>
+				    <td class="tg-c3ow">748970</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.51</td>
+				    <td class="tg-c3ow">738530</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.51</td>
+				    <td class="tg-c3ow">748970</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.52</td>
+				    <td class="tg-c3ow">738530</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.52</td>
+				    <td class="tg-c3ow">748970</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.60</td>
+				    <td class="tg-c3ow">73C530</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.60</td>
+				    <td class="tg-c3ow">74C970</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.61</td>
+				    <td class="tg-c3ow">73C530</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.61</td>
+				    <td class="tg-c3ow">74C970</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.62</td>
+				    <td class="tg-c3ow">73C530</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.62</td>
+				    <td class="tg-c3ow">74C970</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.75</td>
+				    <td class="tg-c3ow">961990</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.75</td>
+				    <td class="tg-c3ow">971DD0</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.76</td>
+				    <td class="tg-c3ow">8489F0</td>
+				    <td class="tg-c3ow">66608</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">e70ad69b3faab612e8115960f568a924</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1.76</td>
+				    <td class="tg-c3ow">858E30</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">luke_rom_image</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">3.55</td>
+				    <td class="tg-c3ow">8FF3D0</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">3.55</td>
+				    <td class="tg-c3ow">90FEE0</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.00</td>
+				    <td class="tg-c3ow">936B20</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.00</td>
+				    <td class="tg-c3ow">948380</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.01</td>
+				    <td class="tg-c3ow">936A80</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.01</td>
+				    <td class="tg-c3ow">9482E0</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.05</td>
+				    <td class="tg-c3ow">936D20</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.05</td>
+				    <td class="tg-c3ow">948580</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.06</td>
+				    <td class="tg-c3ow">936E70</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.06</td>
+				    <td class="tg-c3ow">9486D0</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.07</td>
+				    <td class="tg-c3ow">936FB0</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.07</td>
+				    <td class="tg-c3ow">948810</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.55</td>
+				    <td class="tg-c3ow">A3E4E0</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">4.55</td>
+				    <td class="tg-c3ow">A4FFD0</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">5.00</td>
+				    <td class="tg-c3ow">A71350</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">5.00</td>
+				    <td class="tg-c3ow">A82D00</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">5.05</td>
+				    <td class="tg-c3ow">A71750</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow">ov580_full_UAC_20120918_21307.bin</td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">5.05</td>
+				    <td class="tg-c3ow">A83100</td>
+				    <td class="tg-c3ow">69724</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">9e7ddcb8b891d7227ac0bdc998ddbfe7</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">6.00</td>
+				    <td class="tg-c3ow">B0A82F</td>
+				    <td class="tg-c3ow">68032</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">24afe3c941dc599aafd23ac5170a4d14</td>
+				    <td class="tg-c3ow">UVC</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">6.00</td>
+				    <td class="tg-c3ow">B1D8BE</td>
+				    <td class="tg-c3ow">64036</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow">99ca1e97ea2bb9edaf4c6f511292b4e2</td>
+				    <td class="tg-c3ow">UAC</td>
+				  </tr>
+				</table>
+				<br>
+				<p>
+					I will use 5.05 UVC for a proper driver check <a hfref="https://github.com/psxdev/luke_firmwares">luke_firmwares repository</a> to find all firmwares if you have not access to a PlayStation Kernel yourself to extract using the offset and size published here.
+				</p>
+				
+				
+				<br>
+				
+				<h2>luke_ioctl</h2>
+				<p>This function receive ioctl commands and buffer with parameters
+				</p>
+				<p> This table is for kernel and libSceCamera.sprx from 5.05
+				<table class="tg">
+				  <tr>
+				    <th class="tg-c3ow">cmd</th>
+				    <th class="tg-c3ow">libSceCamera.sprx caller<br></th>
+				    <th class="tg-c3ow">libSceCamera.sprx call from user or internal</th>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0188E16</td>
+				    <td class="tg-c3ow">sub_10A0</td>
+				    <td class="tg-c3ow">sceCameraSetConfig,sceCameraSetConfigInternal</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0188E18</td>
+				    <td class="tg-c3ow">sub_1670</td>
+				    <td class="tg-c3ow">sceCameraGetConnfig</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0188E1A</td>
+				    <td class="tg-c3ow">sub_1960</td>
+				    <td class="tg-c3ow">sceCameraStop,sceCameraStopByHandle</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0208E19</td>
+				    <td class="tg-c3ow">sub_1740</td>
+				    <td class="tg-c3ow">sceCameraStart,sceCameraStartByHandle</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0148E1E</td>
+				    <td class="tg-c3ow">sub_3E80</td>
+				    <td class="tg-c3ow">sceCameraIsAttached</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0108E26</td>
+				    <td class="tg-c3ow">sub_1A90</td>
+				    <td class="tg-c3ow">sceCameraSetVideoSync,sceCameraSetVideoSyncInternal</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0288E14</td>
+				    <td class="tg-c3ow">sub_AF0</td>
+				    <td class="tg-c3ow">sceCameraOpen,sceCameraOpenByModuleId</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0388E1B</td>
+				    <td class="tg-c3ow">sub_39A0</td>
+				    <td class="tg-c3ow">sceCameraSet*</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0388E1C</td>
+				    <td class="tg-c3ow">sub_3390</td>
+				    <td class="tg-c3ow">sceCameraGetAttribute</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0388E1C</td>
+				    <td class="tg-c3ow">sub_3300</td>
+				    <td class="tg-c3ow">sceCameraGetAutoExposureGain,sceCameraGetAutoWhiteBalance</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0468E02</td>
+				    <td class="tg-c3ow">sub_5000</td>
+				    <td class="tg-c3ow">sceCameraGetRegister</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0468E03</td>
+				    <td class="tg-c3ow">sub_5210</td>
+				    <td class="tg-c3ow">sceCameraSetRegister</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0388E1D</td>
+				    <td class="tg-c3ow">sub_1B80</td>
+				    <td class="tg-c3ow">sceCameraGetFrameData</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0048E23</td>
+				    <td class="tg-c3ow">sub_3250</td>
+				    <td class="tg-c3ow">sceCameraIsValidFrame</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0x40408E22</td>
+				    <td class="tg-c3ow">sub_AF0</td>
+				    <td class="tg-c3ow"></td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0x40308E24</td>
+				    <td class="tg-c3ow">sub_5930</td>
+				    <td class="tg-c3ow">hftC5A1C8OQ_F_A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E08</td>
+				    <td class="tg-c3ow">sub_4180</td>
+				    <td class="tg-c3ow">sceCameraGetDeviceInfo</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E09</td>
+				    <td class="tg-c3ow">nnR7KAIDPv8_F_A_0</td>
+				    <td class="tg-c3ow">nnR7KAIDPv8_F_A</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E0A</td>
+				    <td class="tg-c3ow">sub_5D10</td>
+				    <td class="tg-c3ow"></td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E17</td>
+				    <td class="tg-c3ow"></td>
+				    <td class="tg-c3ow"></td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E20</td>
+				    <td class="tg-c3ow">sub_49C0</td>
+				    <td class="tg-c3ow">sceCameraSetCalibData</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E21</td>
+				    <td class="tg-c3ow">sub_4080</td>
+				    <td class="tg-c3ow">sceCameraSetForceActivate</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0088E28</td>
+				    <td class="tg-c3ow">sub_5FB0</td>
+				    <td class="tg-c3ow">sceCameraSetVrTrackerMode</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0048E27</td>
+				    <td class="tg-c3ow">sub_5EC0</td>
+				    <td class="tg-c3ow">sceCameraSetDebugStop</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">0xC0108E15</td>
+				    <td class="tg-c3ow">sub_EF0</td>
+				    <td class="tg-c3ow">sceCameraClose,sceCameraCloseByHandle</td>
+				  </tr>
+				</table>
+				
+							
+				<br>
+				
+				<h2>Thanks</h2>
+				<ul>
+					<li>Phill Harrison and Dr. Richard Marks since their first presentations about AR with PlayStation 2 at E3 before EyeToy was released, they were a source of inspiration for me, and now with both at Google, Sony lost an incredible source of innovation, so good luck for them</li>
+					<li>zecoxao for sharing with me some kernel stuff not all kernels were my own</li>
+					<li>z80, wildcard, flatz, alexaltea and all guys on discord who have been working on kernel land</li>
+					<li>jldiez, alvaroprieto aux to usb3 masters
+					<li>hitodama ps4sdk master</li>
+					<li>masterzorag liborbis partner :P</li>
+					<li>cturt and all people involved in the first steps on PlayStation 4 reverse engineering</li>
+				</ul>
+			</div>
+		</div>
+
+		<script src="js/prism.js" type="text/javascript"></script>
+	</body>
+</html>
