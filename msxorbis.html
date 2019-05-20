@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/core.css" />
+		<link rel="stylesheet" type="text/css" href="css/prism.css" />
+		<title>MSXORBIS  at MSX RU06 Sevilla May 18th 2019</title>
+	</head>
+	
+	<body>
+		<div class="page">
+			<div class="container">
+				<div class="header">
+					<a href="about.html" class="header-element">
+						About me
+					</a>
+					
+					<a href="stuff.html" class="header-element">
+						Stuff
+					</a>
+					
+					<a href="index.html" class="header-element">
+						Home
+					</a>
+				</div>
+				
+				<h1>MSXORBIS a MSX emulator for PlayStation 4 with liborbis based on bluemsx</h1>
+				<h2>MSX RU06 Sevilla May 18th 2019</h2>
+				
+				
+				<br>
+				
+				<h2>Brief History</h2>
+				
+				<p>
+					My first contact with computers was in 1984 with a MSX HitBit Sony 55p. I started then my love story with Sony devices and of course with MSX systems :P
+				</p>
+				<p>
+					I have been making libraries, tools and homebrew for PlayStation devices since first Playstation model, so more than 35 years since my first code for MSX in basic and more than 25 years from my first code for a PlayStation device. I feel old :P.
+				</p>
+				<h2>Firt steps in msx emulation fmsx port</h2>
+				<p>
+					I made my first intent of MSX emulator port based on fMSX for PlayStation Vita. I was with my first steps of homebrew code for PlayStation 4 then so i decided to try a port of fMSX for PlayStation 4. 
+				</p>
+				<p>
+					I like challenges, it is fun learn how things are done when you have not information about a Sony device, and i have been doing reverse engineering since first PlayStation model. 
+					So i began to make a C library called liborbis to try to port fMSX to PlayStation 4. I released the code for the emulator at December 25th 2017 and it was showed last year in MSX RU05 and it is available at:
+				<p>
+				<p>
+					<a href="https://github.com/psxdev/fmsx">fmsx emulator port for PlayStation 4</a>
+				</p>
+				<p>
+					and later i released all libraries that i have been using since then at:
+				</p>
+				<p>	
+					<a href="https://github.com/orbisdev">Liborbis for PlayStation 4</a>
+				</p>
+				<p>
+					This fMSX emulator port, can load msx, msx2 and msx2+ and load games in rom and dsk format but it doesn’t let load real msx models and many devices are not emulated so i wanted to go further and emulate real msx models and devices like sunrise ide and others.
+				</p>
+				
+				<h2>Bluemsx port</h2>
+			
+				
+				<p>
+					There are two emulator with features that i was looking for:
+					<ul>
+					<li>Openmsx</li>
+					<li>Bluemsx</li>
+					</ul>
+				</p>
+				<p>
+					I discarded Openmsx because it is c++ based and there are many requirements not present in closed devices so i would need to port many of them and my free time is limited.
+				</p>
+				<p>
+					Bluemsx was the right choice, there was a port for Wii and i had been working with blueberry (a bluemsx port for Raspberry Pi devices) for a cartridge reader project published by meesokim in github.
+				</p>
+				<p>
+					After last MSX RU05 meeting i began the port of bluemsx. The challenges i have found:
+					<ul>
+					<li>I rewrote the xml parser using sxmlc simple, lightweight XML parser in C and the mediadb to use the new parser.</li>
+					<li>I used native GL ES 2.0 instead of sdl layer</li>
+					<li>I rewrote the file io to redirect all file operations to my orbisFile layer to let me load all files from network</li>
+					<li>I wrote all the archxxxx for orbis platform in a folder called Orbis</li>
+					<li>I use also some libraries like freetype and the orbisfreetype-gl wrapper (not for emulation part)</li>
+					<li>Liborbis and clang with freebsd binutils</li>
+					<li>Hitodama sdk with my addons for 5.05</li>
+					</ul>
+				</p>
+				 
+				<p>
+									<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Meme It's a Sony soon <a href="https://t.co/yr0uRpsmLf"></a>
+					</p>&mdash; psxdev (@psxdev) <a href="https://twitter.com/psxdev/status/1119201576252575745?s=03">April 19, 2019</a></blockquote>	
+										<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+					
+				</p>
+				
+				<p>
+									<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">msxorbis now run symbos emulating Sony hitbit f1xv with 512k +sunrise ide controller+nextor operating system+symbos<a href="https://t.co/oPoTbzBeSK"></a>
+					</p>&mdash; psxdev (@psxdev) <a href="https://twitter.com/psxdev/status/1122193279011971073?s=03">April 27, 2019</a></blockquote>	
+										<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+					
+				</p>
+				
+				<p>
+									<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Almost ready for 18th. @reidrac  Night Knight on PlayStation 4<a href="https://t.co/Z0Pglccdc9"></a>
+					</p>&mdash; psxdev (@psxdev) <a href="https://twitter.com/psxdev/status/1129116369814003715?s=03">April 16, 2019</a></blockquote>	
+										<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+					
+				</p>
+				<p>
+					I showed the initial port at RU06 May 18th. You can check the video of the conference at:
+				</p>
+				<p>	
+					<a href="https://t.co/xYv5u6qmse">MSX RU06 video(spanish)</a>
+				</p>
+				
+				
+				
+				
+							
+				<br>
+				
+				
+		<script src="js/prism.js" type="text/javascript"></script>
+	</body>
+</html>
