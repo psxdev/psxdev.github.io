@@ -1,0 +1,1559 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/core.css" />
+		<link rel="stylesheet" type="text/css" href="css/prism.css" />
+		<title>Luke No... I am PlayStation Camera, part 2- PlayStation Camera for Windows 10</title>
+	</head>
+	
+	<body>
+		<div class="page">
+			<div class="container">
+				<div class="header">
+					<a href="about.html" class="header-element">
+						About me
+					</a>
+					
+					<a href="stuff.html" class="header-element">
+						Stuff
+					</a>
+					
+					<a href="index.html" class="header-element">
+						Home
+					</a>
+				</div>
+				
+				<h1>Luke No... I am PlayStation Camera, part 2</h1>
+				<h2>PlayStation Camera for Windows 10</h2>
+				
+				<hr>
+				
+				<p>
+					<b>Note</b>: This article is part of PlayStation Camera article series, older articles:
+				</p>
+				
+				<ul>
+					<li><b><a href="luke.html">Luke No... I am PlayStation Camera, part 1 - Introduction to PlayStation Camera</a></b></li>
+				</ul>
+				
+				<br>
+				
+				<h2>High Level Design</h2>
+				
+				<p>
+					I published this highlevel design diagram in 2015: 
+				</p>
+				<div class="center">
+				<img src="assets/highlevel.jpg">
+				</div>
+				<p> 
+					<ul>
+						<p><li><b>OV580</b>. It is an asic from Omnivision a typical custom USB bridge solution to manage all other chips. No information or datasheet about it without signing a NDA with Omnivision. Other companies using it are:
+						<ul>
+							<li>Mantis Vision</li>
+							<li>LeapMotion</li>
+							<li>Leopard Imaging</li>
+						</ul>
+
+						I have worked with others Omnivision USB bridge solutions included in PlayStation EyeToy(OV519) and PlayStation Eye(OV534) so basically, it is the same work i made with other drivers from Omnivision.
+
+						</li>
+						</p>
+
+						<p><li><b>OV9713</b>. Two cmos sensors from Omnivision well documented with full datasheet available in google.
+							PlayStation kernel driver Luke has support for differents cmos sensors with custom settings each:
+							<p><ul>
+								<li>OV9713 1G4P</li>
+								<li>OV9714 1G4P</li>
+								<li>KINKO 1G4P</li>
+								<li>5P</li>
+							</ul></p>
+						</li>
+						</p>
+						<p><li><b>AK5703</b>.An analogical to digital converter connected with an microphone array (4). Datasheet is available.  The datasheet was very helpfull to get audio properly from PlayStation 4 Camera.
+						</li>
+						</p>
+						<p><li><b>4g51A</b>. An eeprom chip. It contains the initial configuration for PlayStation 4 Camera.
+						</li>
+						</p>
+					</ul>
+
+				</p>
+				<br>
+
+				
+				<h2>AUX connector</h2>
+				<p>
+					Sony is using a custom connector called AUX however internally it is USB 3 compliant, so if you want to use this device with PC/Mac first you will need an AUX female to USB 3 male converter. 
+
+					<p>You can build your own pcb:
+					<p>
+					<a href="https://oshpark.com/shared_projects/0PjWmdWL">Pcb design by @alvaroprieto</a>
+					</p>
+						<div class="center">
+						<img src="assets/auxfemale2usb3male.jpg">
+					</div>
+
+					</p>
+
+					
+			
+				</p>
+				<br>
+				
+				<h2>USB Boot device</h2>
+				
+				<p>
+					Camera has a default mode always when you connect it. Device is showed with custom USB device called USB Boot. It will be used to receive and load the firmware to the Camera.
+				</p>
+				<p>
+					When you connect the Camera to Windows 10 you have an USB unknown class issue in your device tree
+
+					<p>
+					<div class="center">
+						<img src="assets/usbboot_default.png">
+					</div>
+					</p>
+				</p>
+
+				<p>
+				
+					To avoid that unknown class issue we will use a custom driver installation using a wizard from libusbk:
+				</p> 
+				
+				<h3>Step 1 Download libusbk</h3>
+
+				<p> Download <a href="https://sourceforge.net/projects/libusbk/files/libusbK-release/3.0.7.0/">libusbk</a>
+
+				<p> We can download the binary distribution, because we will use the libusbk-inf-wizard only to build a proper usb device using WinUSB for USB Boot device.
+
+				<div class="center">
+				<img src="assets/libusbK-inf-wizard.png">
+				</div>
+				<br>
+				<h3>Step 2 Run libusbk-inf-wizard</h3>
+
+				<p>
+					Run the wizard and choose WinUsb
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_1.png">
+					</div>
+				</p>
+				<br>
+
+				<p>
+					Choose the Usb Boot device
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_2.png">
+					</div>
+				</p>
+				<br>
+
+				<p>
+					My wizard will use these class and interface GUID. We will use later with our firmware loader. If you use your own wizard instead my installer you will need these values.
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_3.png">
+					</div>
+				</p>
+				<br>
+
+				<p>
+					We can leave all in C:\USB_Boot folder
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_4.png">
+					</div>
+				</p>
+				<br>
+
+
+				<p>
+					Ready we have the installer ready
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_5.png">
+					</div>
+				</p>
+				<br>
+
+
+				
+				<h3>Step 3 Install Usb Boot driver</h3>
+				<p>
+					Install our driver, you can use my own installer from <a href="https://github.com/psxdev/OrbisEyeCam">here</a>
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_6.png">
+					</div>
+				</p>
+				<br>
+				<p>
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_7.png">
+					</div>
+				</p>
+				<br>
+
+				<p>
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_8.png">
+					</div>
+				</p>
+				<br>
+
+				<p>
+					<div class="center">
+						<img src="assets/libusbK-inf-wizard_9.png">
+					</div>
+				</p>
+				<br>
+
+				
+
+				<p>
+					After installation you will see our Usb Boot device ready to use
+					<div class="center">
+						<img src="assets/usbboot_after.png">
+					</div>
+				</p>
+				<br>
+				
+				
+				
+				<h2>USB Boot device usbview descriptors Model CUH-ZEY2</h2>
+				<pre><code class="language-c">
+				[Port13]  :  USB Boot
+
+
+Is Port User Connectable:         yes
+Is Port Debug Capable:            yes
+Companion Port Number:            1
+Companion Hub Symbolic Link Name: USB#ROOT_HUB30#4&11b2f50b&0&0#{f18a0e88-c30c-11d0-8815-00a0c906bed8}
+Protocols Supported:
+ USB 1.1:                         no
+ USB 2.0:                         no
+ USB 3.0:                         yes
+
+Device Power State:               PowerDeviceD0
+
+       ---===>Device Information<===---
+English product name: "USB Boot "
+
+ConnectionStatus:                  
+Current Config Value:              0x01  -> Device Bus Speed: SuperSpeed
+Device Address:                    0x04
+Open Pipes:                           2
+
+          ===>Device Descriptor<===
+bLength:                           0x12
+bDescriptorType:                   0x01
+bcdUSB:                          0x0300
+bDeviceClass:                      0x00  -> This is an Interface Class Defined Device
+bDeviceSubClass:                   0x00
+bDeviceProtocol:                   0x00
+bMaxPacketSize0:                   0x09 = (9) Bytes
+idVendor:                        0x05A9 = OmniVision Technologies, Inc.
+idProduct:                       0x0580
+bcdDevice:                       0x0100
+iManufacturer:                     0x01
+     English (United States)  "OmniVision Technologies, Inc."
+iProduct:                          0x02
+     English (United States)  "USB Boot "
+iSerialNumber:                     0x00
+bNumConfigurations:                0x01
+
+          ---===>Open Pipes<===---
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x01  -> Direction: OUT - EndpointID: 1
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x82  -> Direction: IN - EndpointID: 2
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+       ---===>Full Configuration Descriptor<===---
+
+          ===>Configuration Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x02
+wTotalLength:                    0x002C  -> Validated
+bNumInterfaces:                    0x01
+bConfigurationValue:               0x01
+iConfiguration:                    0x00
+bmAttributes:                      0x80  -> Bus Powered
+MaxPower:                          0x32 = 400 mA
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x00
+bAlternateSetting:                 0x00
+bNumEndpoints:                     0x02
+bInterfaceClass:                   0xFF  -> Interface Class Unknown to USBView
+bInterfaceSubClass:                0x00
+bInterfaceProtocol:                0x00
+iInterface:                        0x00
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x01  -> Direction: OUT - EndpointID: 1
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+ ===>SuperSpeed Endpoint Companion Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x30
+bMaxBurst:                         0x0F
+bmAttributes:                      0x00The bulk endpoint does not define streams (MaxStreams == 0)
+wBytesPerInterval:                 0x0000
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x82  -> Direction: IN - EndpointID: 2
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+ ===>SuperSpeed Endpoint Companion Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x30
+bMaxBurst:                         0x0F
+bmAttributes:                      0x00The bulk endpoint does not define streams (MaxStreams == 0)
+wBytesPerInterval:                 0x0000
+
+          ===>BOS Descriptor<===
+bLength:                           0x05
+bDescriptorType:                   0x0F
+wTotalLength:                      0x0016
+bNumDeviceCaps:                    0x02
+
+          ===>USB 2.0 Extension Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x02
+bmAttributes:                      0x00000002  -> Supports Link Power Management protocol
+
+          ===>SuperSpeed USB Device Capability Descriptor<===
+bLength:                           0x0A
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x03
+bmAttributes:                      0x00
+wSpeedsSupported:                  0x0E
+  -> Supports full-speed operation
+  -> Supports high-speed operation
+  -> Supports SuperSpeed operation
+bFunctionalitySupport:             0x01 -> lowest speed = full-speed
+bU1DevExitLat:                     0x0A -> less than 10 micro-seconds
+wU2DevExitLat:                     0x0020 -> less than 32 micro-seconds
+
+				</code></pre>
+
+
+				<h2>USB Boot device usbview descriptors Model CUH-ZEY1</h2>
+				
+				<pre><code class="language-c">
+
+[Port13]  :  USB Boot
+
+
+Is Port User Connectable:         yes
+Is Port Debug Capable:            yes
+Companion Port Number:            1
+Companion Hub Symbolic Link Name: USB#ROOT_HUB30#4&11b2f50b&0&0#{f18a0e88-c30c-11d0-8815-00a0c906bed8}
+Protocols Supported:
+ USB 1.1:                         no
+ USB 2.0:                         no
+ USB 3.0:                         yes
+
+Device Power State:               PowerDeviceD0
+
+       ---===>Device Information<===---
+English product name: "USB Boot "
+
+ConnectionStatus:                  
+Current Config Value:              0x01  -> Device Bus Speed: SuperSpeed
+Device Address:                    0x06
+Open Pipes:                           2
+
+          ===>Device Descriptor<===
+bLength:                           0x12
+bDescriptorType:                   0x01
+bcdUSB:                          0x0300
+bDeviceClass:                      0x00  -> This is an Interface Class Defined Device
+bDeviceSubClass:                   0x00
+bDeviceProtocol:                   0x00
+bMaxPacketSize0:                   0x09 = (9) Bytes
+idVendor:                        0x05A9 = OmniVision Technologies, Inc.
+idProduct:                       0x0580
+bcdDevice:                       0x0100
+iManufacturer:                     0x01
+     English (United States)  "OmniVision Technologies, Inc."
+iProduct:                          0x02
+     English (United States)  "USB Boot "
+iSerialNumber:                     0x00
+bNumConfigurations:                0x01
+
+          ---===>Open Pipes<===---
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x01  -> Direction: OUT - EndpointID: 1
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x82  -> Direction: IN - EndpointID: 2
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+       ---===>Full Configuration Descriptor<===---
+
+          ===>Configuration Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x02
+wTotalLength:                    0x002C  -> Validated
+bNumInterfaces:                    0x01
+bConfigurationValue:               0x01
+iConfiguration:                    0x00
+bmAttributes:                      0x80  -> Bus Powered
+MaxPower:                          0x32 = 400 mA
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x00
+bAlternateSetting:                 0x00
+bNumEndpoints:                     0x02
+bInterfaceClass:                   0xFF  -> Interface Class Unknown to USBView
+bInterfaceSubClass:                0x00
+bInterfaceProtocol:                0x00
+iInterface:                        0x00
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x01  -> Direction: OUT - EndpointID: 1
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+ ===>SuperSpeed Endpoint Companion Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x30
+bMaxBurst:                         0x0F
+bmAttributes:                      0x00The bulk endpoint does not define streams (MaxStreams == 0)
+wBytesPerInterval:                 0x0000
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x82  -> Direction: IN - EndpointID: 2
+bmAttributes:                      0x02  -> Bulk Transfer Type
+wMaxPacketSize:                  0x0400
+bInterval:                         0x00
+
+ ===>SuperSpeed Endpoint Companion Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x30
+bMaxBurst:                         0x0F
+bmAttributes:                      0x00The bulk endpoint does not define streams (MaxStreams == 0)
+wBytesPerInterval:                 0x0000
+
+          ===>BOS Descriptor<===
+bLength:                           0x05
+bDescriptorType:                   0x0F
+wTotalLength:                      0x0016
+bNumDeviceCaps:                    0x02
+
+          ===>USB 2.0 Extension Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x02
+bmAttributes:                      0x00000002  -> Supports Link Power Management protocol
+
+          ===>SuperSpeed USB Device Capability Descriptor<===
+bLength:                           0x0A
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x03
+bmAttributes:                      0x00
+wSpeedsSupported:                  0x0E
+  -> Supports full-speed operation
+  -> Supports high-speed operation
+  -> Supports SuperSpeed operation
+bFunctionalitySupport:             0x01 -> lowest speed = full-speed
+bU1DevExitLat:                     0x0A -> less than 10 micro-seconds
+wU2DevExitLat:                     0x0020 -> less than 32 micro-seconds
+
+				</code></pre>
+				<br>
+				<h2>Enumerating devices and loading firmware</h2>
+				If you remember first article series <b><a href="luke.html">Luke No... I am PlayStation Camera, part 1 - Introduction to PlayStation Camera</a></b> i explained and showed the differents UVC firmwares for Luke availables at my <a href="https://github.com/psxdev/luke_firmwares">luke_firmwares repository</a> 
+
+				<br>
+				<br>
+				
+				<p>Code from OrbisEyeCam library using WinUsb:
+				<br>
+				<pre><code class="language-c">
+{
+	orbiseye::OrbisEyeCam::OrbisEyeCamRef eye;
+
+
+	std::vector<OrbisEyeCam::OrbisEyeCamRef> devices(OrbisEyeCam::getDevices());
+	if (devices.size() == 1)
+	{
+		eye = devices.at(0);
+		eye->firmware_upload();
+	}
+}
+				</code></pre>
+				</p>
+				
+				<br>
+				
+				<h2>Loading firmware</h2>
+				<p>Code from OrbisEyeCam library using WinUsb:
+				<br>
+				<pre><code class="language-c">
+	int OrbisEyeCam::submitAndWait_controlTransfer(uint8_t bmRequestType, uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint16_t wLength, uint8_t* buffer)
+	{
+		controlTransferReturned = false;
+		controlTransferError = false;
+		DWORD actual_length = 0;
+		WINUSB_SETUP_PACKET setup = { bmRequestType, bRequest, wValue, wIndex, wLength };
+		BOOL status = WinUsb_ControlTransfer(handle_, setup, buffer, wLength, &actual_length, nullptr);
+
+		if (!status)
+		{
+			debug("Control transfer error: %s\n", controlTransferStatus(GetLastError()));
+			controlTransferError = true;
+		}
+		if (wLength != actual_length)
+		{
+			debug("phase 2 read failed received %d bytes instead of %d\n", actual_length, wLength);
+			controlTransferError = true;
+		}
+		controlTransferReturned = true;
+		return actual_length;
+	}
+
+	/*
+	 * Submit a control transfer to the usb system and continue with the program flow, i.e.
+	 * do not wait until the packet has been processed.
+	 */
+	void OrbisEyeCam::submit_controlTransfer(uint8_t bmRequestType, uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint16_t wLength, uint8_t* buffer)
+	{
+		WINUSB_SETUP_PACKET setup = { bmRequestType, bRequest, wValue, wIndex, wLength };
+		WinUsb_ControlTransfer(handle_, setup, buffer, wLength, nullptr, &control_transfer);
+	}
+
+	void OrbisEyeCam::firmware_upload()
+	{
+		if (!firmwareisloaded)
+		{
+			if (!WinUsb_Initialize(device_, &handle_))
+			{
+				std::cout << "ov580 Camera boot mode not found..." << std::endl;
+				exit(0);
+			}
+			//cout <<"ov580 Camera boot mode found..." << endl;
+
+			std::cout << "Uploading firmware to ov580 camera..." << std::endl;
+
+			uint8_t chunk[CHUNK_SIZE];
+
+			std::ifstream firmware(firmware_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+
+			if (firmware.is_open())
+			{
+				uint32_t length = (uint32_t)firmware.tellg();
+				firmware.seekg(0, std::ios::beg);
+
+				uint16_t index = 0x14;
+				uint16_t value = 0;
+
+				for (uint32_t pos = 0; pos < length; pos += CHUNK_SIZE)
+				{
+					uint16_t size = (CHUNK_SIZE > (length - pos) ? (uint16_t)(length - pos) : CHUNK_SIZE);
+					firmware.read((char*)chunk, size);
+					submitAndWait_controlTransfer(0x40, 0x0, value, index, size, chunk);
+					if (((uint32_t)value + size) > 0xFFFF) index += 1;
+
+					value += size;
+				}
+				firmware.close();
+
+				chunk[0] = 0x5b;
+				submitAndWait_controlTransfer(0x40, 0x0, 0x2200, 0x8018, 1, chunk);
+
+				std::cout << "Firmware uploaded..." << std::endl;
+			}
+			else
+			{
+				std::cout << "Unable to open firmware.bin!" << std::endl;
+			}
+			exit(0);
+		}
+		else
+		{
+			std::cout << "Firmware already loaded..." << std::endl;
+		}
+	}
+				</code></pre>
+				</p>
+				
+				<br>
+				<h2>Usb Camera-OV580 device</h2>
+
+				<p>
+					After loading firmware a new USB device UVC compliant will be available in your device tree
+
+					<p>
+					<div class="center">
+						<img src="assets/deviceafter.png">
+					</div>
+					</p>
+				</p>
+				<br>
+				<h2>Usb Camera-OV580 usbview device descriptors Model CUH-ZEY2</h2>
+				
+				<br>
+				<pre><code class="language-c">
+
+[Port13]  :  Dispositivo compuesto USB
+
+
+Is Port User Connectable:         yes
+Is Port Debug Capable:            yes
+Companion Port Number:            1
+Companion Hub Symbolic Link Name: USB#ROOT_HUB30#4&11b2f50b&0&0#{f18a0e88-c30c-11d0-8815-00a0c906bed8}
+Protocols Supported:
+ USB 1.1:                         no
+ USB 2.0:                         no
+ USB 3.0:                         yes
+
+Device Power State:               PowerDeviceD3
+
+       ---===>Device Information<===---
+String Descriptor for index 2 not available while device is in low power state.
+
+ConnectionStatus:                  
+Current Config Value:              0x01  -> Device Bus Speed: SuperSpeed
+Device Address:                    0x0A
+Open Pipes:                           0
+*!*ERROR:  No open pipes!
+
+          ===>Device Descriptor<===
+bLength:                           0x12
+bDescriptorType:                   0x01
+bcdUSB:                          0x0300
+bDeviceClass:                      0xEF  -> This is a Multi-interface Function Code Device
+bDeviceSubClass:                   0x02  -> This is the Common Class Sub Class
+bDeviceProtocol:                   0x01  -> This is the Interface Association Descriptor protocol
+bMaxPacketSize0:                   0x09 = (9) Bytes
+idVendor:                        0x05A9 = OmniVision Technologies, Inc.
+idProduct:                       0x058B
+bcdDevice:                       0x0100
+iManufacturer:                     0x01
+String Descriptor for index 1 not available while device is in low power state.
+iProduct:                          0x02
+String Descriptor for index 2 not available while device is in low power state.
+iSerialNumber:                     0x00
+bNumConfigurations:                0x01
+
+       ---===>Full Configuration Descriptor<===---
+
+          ===>Configuration Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x02
+wTotalLength:                    0x0137  -> Validated
+bNumInterfaces:                    0x02
+bConfigurationValue:               0x01
+iConfiguration:                    0x00
+bmAttributes:                      0x80  -> Bus Powered
+MaxPower:                          0x40 = 512 mA
+
+          ===>IAD Descriptor<===
+bLength:                           0x08
+bDescriptorType:                   0x0B
+bFirstInterface:                   0x00
+bInterfaceCount:                   0x02
+bFunctionClass:                    0x0E  -> Video Interface Class
+bFunctionSubClass:                 0x03  -> Video Interface Collection
+bFunctionProtocol:                 0x00  -> PC_PROTOCOL_UNDEFINED protocol
+iFunction:                         0x02
+String Descriptor for index 2 not available while device is in low power state.
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x00
+bAlternateSetting:                 0x00
+bNumEndpoints:                     0x00
+bInterfaceClass:                   0x0E  -> Video Interface Class
+bInterfaceSubClass:                0x01  -> Video Control Interface SubClass
+bInterfaceProtocol:                0x00
+iInterface:                        0x02
+String Descriptor for index 2 not available while device is in low power state.
+
+          ===>Class-Specific Video Control Interface Header Descriptor<===
+bLength:                           0x0D
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x01
+bcdVDC:                          0x0100
+wTotalLength:                    0x004D  -> Validated
+dwClockFreq:                 0x07735940 = (125000000) Hz
+bInCollection:                     0x01
+baInterfaceNr[1]:                  0x01
+USB Video Class device: spec version 1.0
+
+          ===>Video Control Input Terminal Descriptor<===
+bLength:                           0x12
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x02
+bTerminalID:                       0x01
+wTerminalType:                   0x0201 = (ITT_CAMERA)
+bAssocTerminal:                    0x00
+iTerminal:                         0x00
+===>Camera Input Terminal Data
+wObjectiveFocalLengthMin:        0x0000
+wObjectiveFocalLengthMax:        0x0000
+wOcularFocalLength:              0x0000
+bControlSize:                      0x03
+bmControls : 0x0A 0x00 0x00 
+     D00 = 0   no -  Scanning Mode
+     D01 = 1  yes -  Auto-Exposure Mode
+     D02 = 0   no -  Auto-Exposure Priority
+     D03 = 1  yes -  Exposure Time (Absolute)
+     D04 = 0   no -  Exposure Time (Relative)
+     D05 = 0   no -  Focus (Absolute)
+     D06 = 0   no -  Focus (Relative)
+     D07 = 0   no -  Iris (Absolute)
+     D08 = 0   no -  Iris (Relative)
+     D09 = 0   no -  Zoom (Absolute)
+     D10 = 0   no -  Zoom (Relative)
+     D11 = 0   no -  PanTilt (Absolute)
+     D12 = 0   no -  PanTilt (Relative)
+     D13 = 0   no -  Roll (Absolute)
+     D14 = 0   no -  Roll (Relative)
+     D15 = 0   no -  Reserved
+     D16 = 0   no -  Reserved
+     D17 = 0   no -  Focus, Auto
+     D18 = 0   no -  Privacy
+     D19 = 0   no -  Focus, Simple
+     D20 = 0   no -  Window
+     D21 = 0   no -  Region of Interest
+     D22 = 0   no -  Reserved
+     D23 = 0   no -  Reserved
+
+          ===>Video Control Output Terminal Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x03
+bTerminalID:                       0x02
+wTerminalType:                   0x0101 = (TT_STREAMING)
+bAssocTerminal:                    0x00
+bSourceID:                         0x03
+iTerminal:                         0x00
+
+          ===>Video Control Processing Unit Descriptor<===
+bLength:                           0x0B
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bUnitID:                           0x03
+bSourceID:                         0x01
+wMaxMultiplier:                  0x0000
+bControlSize:                      0x02
+bmControls : 0x5F 0x16 
+     D00 = 1  yes -  Brightness
+     D01 = 1  yes -  Contrast
+     D02 = 1  yes -  Hue
+     D03 = 1  yes -  Saturation
+     D04 = 1  yes -  Sharpness
+     D05 = 0   no -  Gamma
+     D06 = 1  yes -  White Balance Temperature
+     D07 = 0   no -  White Balance Component
+     D08 = 0   no -  Backlight Compensation
+     D09 = 1  yes -  Gain
+     D10 = 1  yes -  Power Line Frequency
+     D11 = 0   no -  Hue, Auto
+     D12 = 1  yes -  White Balance Temperature, Auto
+     D13 = 0   no -  White Balance Component, Auto
+     D14 = 0   no -  Digital Multiplier
+     D15 = 0   no -  Digital Multiplier Limit
+iProcessing :                      0x02
+String Descriptor for index 2 not available while device is in low power state.
+
+          ===>Video Control Extension Unit Descriptor<===
+bLength:                           0x1A
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x06
+bUnitID:                           0x04
+guidExtensionCode:                 {DD880F8A-1CBA-4954-8A25-F7875967F0F7}
+bNumControls:                      0x01
+bNrInPins:                         0x01
+===>List of Connected Units and Terminal ID's
+baSourceID[1]:                     0x01
+bControlSize:                      0x01
+bmControls : 0x01 
+     D00 = 1  yes -  Vendor-Specific (Optional)
+     D01 = 0   no -  Vendor-Specific (Optional)
+     D02 = 0   no -  Vendor-Specific (Optional)
+     D03 = 0   no -  Vendor-Specific (Optional)
+     D04 = 0   no -  Vendor-Specific (Optional)
+     D05 = 0   no -  Vendor-Specific (Optional)
+     D06 = 0   no -  Vendor-Specific (Optional)
+     D07 = 0   no -  Vendor-Specific (Optional)
+iExtension:                        0x02
+String Descriptor for index 2 not available while device is in low power state.
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x01
+bAlternateSetting:                 0x00
+bNumEndpoints:                     0x00
+bInterfaceClass:                   0x0E  -> Video Interface Class
+bInterfaceSubClass:                0x02  -> Video Streaming Interface SubClass
+bInterfaceProtocol:                0x00
+iInterface:                        0x00
+
+          ===>Video Class-Specific VS Video Input Header Descriptor<===
+bLength:                           0x0E
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x01
+bNumFormats:                       0x01
+wTotalLength:                    0x00B1  -> Validated
+bEndpointAddress:                  0x81  -> Direction: IN - EndpointID: 1
+bmInfo:                            0x00  -> Dynamic Format Change not Supported
+bTerminalLink:                     0x02
+bStillCaptureMethod:               0x00  -> No Still Capture
+bTriggerSupport:                   0x00  -> No Hardware Triggering Support
+bTriggerUsage:                     0x00
+bControlSize:                      0x01
+Video Payload Format 1             0x00 
+     D00 = 0   no -  Key Frame Rate
+     D01 = 0   no -  P Frame Rate
+     D02 = 0   no -  Compression Quality
+     D03 = 0   no -  Compression Window Size
+     D04 = 0   no -  Generate Key Frame
+     D05 = 0   no -  Update Frame Segment
+     D06 = 0   no -  Reserved
+     D07 = 0   no -  Reserved
+
+          ===>Video Streaming Uncompressed Format Type Descriptor<===
+bLength:                           0x1B
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x04
+bFormatIndex:                      0x01
+bNumFrameDescriptors:              0x03
+guidFormat:                        {32595559-0000-0010-8000-00AA00389B71} = YUY2 Format
+bBitsPerPixel:                     0x10
+bDefaultFrameIndex:                0x01
+bAspectRatioX:                     0x00
+bAspectRatioY:                     0x00
+bmInterlaceFlags:                  0x00
+     D0    = 0x00 Interlaced stream or variable: No
+     D1    = 0x00 Fields per frame: 2 fields
+     D2    = 0x00 Field 1 first: No
+     D3    = 0x00 Reserved
+     D4..5 = 0x00 Field patterns  -> Field 1 only
+     D6..7 = 0x00 Display Mode  -> Bob only
+bCopyProtect:                      0x00  -> Duplication Unrestricted
+
+          ===>Video Streaming Uncompressed Frame Type Descriptor<===
+          --->This is the Default (optimum) Frame index
+bLength:                           0x2A
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bFrameIndex:                       0x01
+bmCapabilities:                    0x00
+wWidth:                          0x0D78 = 3448
+wHeight:                         0x0328 = 808
+dwMinBitRate:                0x00550580
+dwMaxBitRate:                0x09F6A500
+dwMaxVideoFrameBufferSize:   0x00550580
+dwDefaultFrameInterval:      0x00028B0A = 16.666600 mSec (60.00 Hz)
+bFrameIntervalType:                0x04
+===>Additional Discrete Frame Type Data
+dwFrameInterval[1]:          0x00028B0A = 16.666600 mSec (60.00 Hz)
+dwFrameInterval[2]:          0x00051615 = 33.333300 mSec (30.00 Hz)
+dwFrameInterval[3]:          0x000A2C2A = 66.666600 mSec (15.00 Hz)
+dwFrameInterval[4]:          0x001312D0 = 125.000000 mSec (8.00 Hz)
+
+          ===>Video Streaming Uncompressed Frame Type Descriptor<===
+bLength:                           0x2E
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bFrameIndex:                       0x02
+bmCapabilities:                    0x00
+wWidth:                          0x06D4 = 1748
+wHeight:                         0x0198 = 408
+dwMinBitRate:                0x0015C3C0
+dwMaxBitRate:                0x028CF080
+dwMaxVideoFrameBufferSize:   0x0015C3C0
+dwDefaultFrameInterval:      0x00014585 = 8.333300 mSec (120.00 Hz)
+bFrameIntervalType:                0x05
+===>Additional Discrete Frame Type Data
+dwFrameInterval[1]:          0x00014585 = 8.333300 mSec (120.00 Hz)
+dwFrameInterval[2]:          0x00028B0A = 16.666600 mSec (60.00 Hz)
+dwFrameInterval[3]:          0x00051615 = 33.333300 mSec (30.00 Hz)
+dwFrameInterval[4]:          0x000A2C2A = 66.666600 mSec (15.00 Hz)
+dwFrameInterval[5]:          0x001312D0 = 125.000000 mSec (8.00 Hz)
+
+          ===>Video Streaming Uncompressed Frame Type Descriptor<===
+bLength:                           0x2A
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bFrameIndex:                       0x03
+bmCapabilities:                    0x00
+wWidth:                          0x0382 = 898
+wHeight:                         0x00C8 = 200
+dwMinBitRate:                0x00057B20
+dwMaxBitRate:                0x00A46DC0
+dwMaxVideoFrameBufferSize:   0x00057B20
+dwDefaultFrameInterval:      0x0000A2C2 = 4.166600 mSec (240.00 Hz)
+bFrameIntervalType:                0x04
+===>Additional Discrete Frame Type Data
+dwFrameInterval[1]:          0x0000A2C2 = 4.166600 mSec (240.00 Hz)
+dwFrameInterval[2]:          0x00014585 = 8.333300 mSec (120.00 Hz)
+dwFrameInterval[3]:          0x00028B0A = 16.666600 mSec (60.00 Hz)
+dwFrameInterval[4]:          0x00051615 = 33.333300 mSec (30.00 Hz)
+
+          ===>Color Matching Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x0D
+bColorPrimaries:                   0x01
+bTransferCharacteristics:          0x01
+bMatrixCoefficients:               0x04
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x01
+bAlternateSetting:                 0x01
+bNumEndpoints:                     0x01
+bInterfaceClass:                   0x0E  -> Video Interface Class
+bInterfaceSubClass:                0x02  -> Video Streaming Interface SubClass
+bInterfaceProtocol:                0x00
+iInterface:                        0x00
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x81  -> Direction: IN - EndpointID: 1
+bmAttributes:                      0x05  -> Isochronous Transfer Type, Synchronization Type = Asynchronous, Usage Type = Data Endpoint
+wMaxPacketSize:                  0x0400
+bInterval:                         0x01
+
+ ===>SuperSpeed Endpoint Companion Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x30
+bMaxBurst:                         0x0F
+bmAttributes:                      0x02 = 48 maximum number of packets within a service interval
+
+wBytesPerInterval:                 0xC000
+
+          ===>Additional Error Checking<===
+PASS: number of uncompressed-frame frame descriptors (3) == number of frame descriptors (3) specified in uncompressed format descriptor(s)
+
+          ===>BOS Descriptor<===
+bLength:                           0x05
+bDescriptorType:                   0x0F
+wTotalLength:                      0x0016
+bNumDeviceCaps:                    0x02
+
+          ===>USB 2.0 Extension Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x02
+bmAttributes:                      0x00000002  -> Supports Link Power Management protocol
+
+          ===>SuperSpeed USB Device Capability Descriptor<===
+bLength:                           0x0A
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x03
+bmAttributes:                      0x00
+wSpeedsSupported:                  0x0C
+  -> Supports high-speed operation
+  -> Supports SuperSpeed operation
+bFunctionalitySupport:             0x02 -> lowest speed = high-speed
+bU1DevExitLat:                     0x0A -> less than 10 micro-seconds
+wU2DevExitLat:                     0x0020 -> less than 32 micro-seconds
+				</code></pre>
+				
+				
+				<br>
+
+				<h2>Usb Camera-OV580 usbview device descriptors Model CUH-ZEY1</h2>
+				
+				<br>
+				<pre><code class="language-c">
+[Port13]  :  Dispositivo compuesto USB
+
+
+Is Port User Connectable:         yes
+Is Port Debug Capable:            yes
+Companion Port Number:            1
+Companion Hub Symbolic Link Name: USB#ROOT_HUB30#4&11b2f50b&0&0#{f18a0e88-c30c-11d0-8815-00a0c906bed8}
+Protocols Supported:
+ USB 1.1:                         no
+ USB 2.0:                         no
+ USB 3.0:                         yes
+
+Device Power State:               PowerDeviceD3
+
+       ---===>Device Information<===---
+English product name: "USB Camera-OV580"
+
+ConnectionStatus:                  
+Current Config Value:              0x01  -> Device Bus Speed: SuperSpeed
+Device Address:                    0x07
+Open Pipes:                           0
+*!*ERROR:  No open pipes!
+
+          ===>Device Descriptor<===
+bLength:                           0x12
+bDescriptorType:                   0x01
+bcdUSB:                          0x0300
+bDeviceClass:                      0xEF  -> This is a Multi-interface Function Code Device
+bDeviceSubClass:                   0x02  -> This is the Common Class Sub Class
+bDeviceProtocol:                   0x01  -> This is the Interface Association Descriptor protocol
+bMaxPacketSize0:                   0x09 = (9) Bytes
+idVendor:                        0x05A9 = OmniVision Technologies, Inc.
+idProduct:                       0x058A
+bcdDevice:                       0x0100
+iManufacturer:                     0x01
+     English (United States)  "Omnivision Technologies, Inc."
+iProduct:                          0x02
+     English (United States)  "USB Camera-OV580"
+iSerialNumber:                     0x00
+bNumConfigurations:                0x01
+
+       ---===>Full Configuration Descriptor<===---
+
+          ===>Configuration Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x02
+wTotalLength:                    0x0137  -> Validated
+bNumInterfaces:                    0x02
+bConfigurationValue:               0x01
+iConfiguration:                    0x00
+bmAttributes:                      0x80  -> Bus Powered
+MaxPower:                          0x40 = 512 mA
+
+          ===>IAD Descriptor<===
+bLength:                           0x08
+bDescriptorType:                   0x0B
+bFirstInterface:                   0x00
+bInterfaceCount:                   0x02
+bFunctionClass:                    0x0E  -> Video Interface Class
+bFunctionSubClass:                 0x03  -> Video Interface Collection
+bFunctionProtocol:                 0x00  -> PC_PROTOCOL_UNDEFINED protocol
+iFunction:                         0x02
+     English (United States)  "USB Camera-OV580"
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x00
+bAlternateSetting:                 0x00
+bNumEndpoints:                     0x00
+bInterfaceClass:                   0x0E  -> Video Interface Class
+bInterfaceSubClass:                0x01  -> Video Control Interface SubClass
+bInterfaceProtocol:                0x00
+iInterface:                        0x02
+     English (United States)  "USB Camera-OV580"
+
+          ===>Class-Specific Video Control Interface Header Descriptor<===
+bLength:                           0x0D
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x01
+bcdVDC:                          0x0100
+wTotalLength:                    0x004D  -> Validated
+dwClockFreq:                 0x07735940 = (125000000) Hz
+bInCollection:                     0x01
+baInterfaceNr[1]:                  0x01
+USB Video Class device: spec version 1.0
+
+          ===>Video Control Input Terminal Descriptor<===
+bLength:                           0x12
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x02
+bTerminalID:                       0x01
+wTerminalType:                   0x0201 = (ITT_CAMERA)
+bAssocTerminal:                    0x00
+iTerminal:                         0x00
+===>Camera Input Terminal Data
+wObjectiveFocalLengthMin:        0x0000
+wObjectiveFocalLengthMax:        0x0000
+wOcularFocalLength:              0x0000
+bControlSize:                      0x03
+bmControls : 0x0A 0x00 0x00 
+     D00 = 0   no -  Scanning Mode
+     D01 = 1  yes -  Auto-Exposure Mode
+     D02 = 0   no -  Auto-Exposure Priority
+     D03 = 1  yes -  Exposure Time (Absolute)
+     D04 = 0   no -  Exposure Time (Relative)
+     D05 = 0   no -  Focus (Absolute)
+     D06 = 0   no -  Focus (Relative)
+     D07 = 0   no -  Iris (Absolute)
+     D08 = 0   no -  Iris (Relative)
+     D09 = 0   no -  Zoom (Absolute)
+     D10 = 0   no -  Zoom (Relative)
+     D11 = 0   no -  PanTilt (Absolute)
+     D12 = 0   no -  PanTilt (Relative)
+     D13 = 0   no -  Roll (Absolute)
+     D14 = 0   no -  Roll (Relative)
+     D15 = 0   no -  Reserved
+     D16 = 0   no -  Reserved
+     D17 = 0   no -  Focus, Auto
+     D18 = 0   no -  Privacy
+     D19 = 0   no -  Focus, Simple
+     D20 = 0   no -  Window
+     D21 = 0   no -  Region of Interest
+     D22 = 0   no -  Reserved
+     D23 = 0   no -  Reserved
+
+          ===>Video Control Output Terminal Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x03
+bTerminalID:                       0x02
+wTerminalType:                   0x0101 = (TT_STREAMING)
+bAssocTerminal:                    0x00
+bSourceID:                         0x03
+iTerminal:                         0x00
+
+          ===>Video Control Processing Unit Descriptor<===
+bLength:                           0x0B
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bUnitID:                           0x03
+bSourceID:                         0x01
+wMaxMultiplier:                  0x0000
+bControlSize:                      0x02
+bmControls : 0x5F 0x16 
+     D00 = 1  yes -  Brightness
+     D01 = 1  yes -  Contrast
+     D02 = 1  yes -  Hue
+     D03 = 1  yes -  Saturation
+     D04 = 1  yes -  Sharpness
+     D05 = 0   no -  Gamma
+     D06 = 1  yes -  White Balance Temperature
+     D07 = 0   no -  White Balance Component
+     D08 = 0   no -  Backlight Compensation
+     D09 = 1  yes -  Gain
+     D10 = 1  yes -  Power Line Frequency
+     D11 = 0   no -  Hue, Auto
+     D12 = 1  yes -  White Balance Temperature, Auto
+     D13 = 0   no -  White Balance Component, Auto
+     D14 = 0   no -  Digital Multiplier
+     D15 = 0   no -  Digital Multiplier Limit
+iProcessing :                      0x02
+     English (United States)  "USB Camera-OV580"
+
+          ===>Video Control Extension Unit Descriptor<===
+bLength:                           0x1A
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x06
+bUnitID:                           0x04
+guidExtensionCode:                 {DD880F8A-1CBA-4954-8A25-F7875967F0F7}
+bNumControls:                      0x01
+bNrInPins:                         0x01
+===>List of Connected Units and Terminal ID's
+baSourceID[1]:                     0x01
+bControlSize:                      0x01
+bmControls : 0x01 
+     D00 = 1  yes -  Vendor-Specific (Optional)
+     D01 = 0   no -  Vendor-Specific (Optional)
+     D02 = 0   no -  Vendor-Specific (Optional)
+     D03 = 0   no -  Vendor-Specific (Optional)
+     D04 = 0   no -  Vendor-Specific (Optional)
+     D05 = 0   no -  Vendor-Specific (Optional)
+     D06 = 0   no -  Vendor-Specific (Optional)
+     D07 = 0   no -  Vendor-Specific (Optional)
+iExtension:                        0x02
+     English (United States)  "USB Camera-OV580"
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x01
+bAlternateSetting:                 0x00
+bNumEndpoints:                     0x00
+bInterfaceClass:                   0x0E  -> Video Interface Class
+bInterfaceSubClass:                0x02  -> Video Streaming Interface SubClass
+bInterfaceProtocol:                0x00
+iInterface:                        0x00
+
+          ===>Video Class-Specific VS Video Input Header Descriptor<===
+bLength:                           0x0E
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x01
+bNumFormats:                       0x01
+wTotalLength:                    0x00B1  -> Validated
+bEndpointAddress:                  0x81  -> Direction: IN - EndpointID: 1
+bmInfo:                            0x00  -> Dynamic Format Change not Supported
+bTerminalLink:                     0x02
+bStillCaptureMethod:               0x00  -> No Still Capture
+bTriggerSupport:                   0x00  -> No Hardware Triggering Support
+bTriggerUsage:                     0x00
+bControlSize:                      0x01
+Video Payload Format 1             0x00 
+     D00 = 0   no -  Key Frame Rate
+     D01 = 0   no -  P Frame Rate
+     D02 = 0   no -  Compression Quality
+     D03 = 0   no -  Compression Window Size
+     D04 = 0   no -  Generate Key Frame
+     D05 = 0   no -  Update Frame Segment
+     D06 = 0   no -  Reserved
+     D07 = 0   no -  Reserved
+
+          ===>Video Streaming Uncompressed Format Type Descriptor<===
+bLength:                           0x1B
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x04
+bFormatIndex:                      0x01
+bNumFrameDescriptors:              0x03
+guidFormat:                        {32595559-0000-0010-8000-00AA00389B71} = YUY2 Format
+bBitsPerPixel:                     0x10
+bDefaultFrameIndex:                0x01
+bAspectRatioX:                     0x00
+bAspectRatioY:                     0x00
+bmInterlaceFlags:                  0x00
+     D0    = 0x00 Interlaced stream or variable: No
+     D1    = 0x00 Fields per frame: 2 fields
+     D2    = 0x00 Field 1 first: No
+     D3    = 0x00 Reserved
+     D4..5 = 0x00 Field patterns  -> Field 1 only
+     D6..7 = 0x00 Display Mode  -> Bob only
+bCopyProtect:                      0x00  -> Duplication Unrestricted
+
+          ===>Video Streaming Uncompressed Frame Type Descriptor<===
+          --->This is the Default (optimum) Frame index
+bLength:                           0x2A
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bFrameIndex:                       0x01
+bmCapabilities:                    0x00
+wWidth:                          0x0D78 = 3448
+wHeight:                         0x0328 = 808
+dwMinBitRate:                0x00550580
+dwMaxBitRate:                0x09F6A500
+dwMaxVideoFrameBufferSize:   0x00550580
+dwDefaultFrameInterval:      0x00028B0A = 16.666600 mSec (60.00 Hz)
+bFrameIntervalType:                0x04
+===>Additional Discrete Frame Type Data
+dwFrameInterval[1]:          0x00028B0A = 16.666600 mSec (60.00 Hz)
+dwFrameInterval[2]:          0x00051615 = 33.333300 mSec (30.00 Hz)
+dwFrameInterval[3]:          0x000A2C2A = 66.666600 mSec (15.00 Hz)
+dwFrameInterval[4]:          0x001312D0 = 125.000000 mSec (8.00 Hz)
+
+          ===>Video Streaming Uncompressed Frame Type Descriptor<===
+bLength:                           0x2E
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bFrameIndex:                       0x02
+bmCapabilities:                    0x00
+wWidth:                          0x06D4 = 1748
+wHeight:                         0x0198 = 408
+dwMinBitRate:                0x0015C3C0
+dwMaxBitRate:                0x028CF080
+dwMaxVideoFrameBufferSize:   0x0015C3C0
+dwDefaultFrameInterval:      0x00014585 = 8.333300 mSec (120.00 Hz)
+bFrameIntervalType:                0x05
+===>Additional Discrete Frame Type Data
+dwFrameInterval[1]:          0x00014585 = 8.333300 mSec (120.00 Hz)
+dwFrameInterval[2]:          0x00028B0A = 16.666600 mSec (60.00 Hz)
+dwFrameInterval[3]:          0x00051615 = 33.333300 mSec (30.00 Hz)
+dwFrameInterval[4]:          0x000A2C2A = 66.666600 mSec (15.00 Hz)
+dwFrameInterval[5]:          0x001312D0 = 125.000000 mSec (8.00 Hz)
+
+          ===>Video Streaming Uncompressed Frame Type Descriptor<===
+bLength:                           0x2A
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x05
+bFrameIndex:                       0x03
+bmCapabilities:                    0x00
+wWidth:                          0x0382 = 898
+wHeight:                         0x00C8 = 200
+dwMinBitRate:                0x00057B20
+dwMaxBitRate:                0x00A46DC0
+dwMaxVideoFrameBufferSize:   0x00057B20
+dwDefaultFrameInterval:      0x0000A2C2 = 4.166600 mSec (240.00 Hz)
+bFrameIntervalType:                0x04
+===>Additional Discrete Frame Type Data
+dwFrameInterval[1]:          0x0000A2C2 = 4.166600 mSec (240.00 Hz)
+dwFrameInterval[2]:          0x00014585 = 8.333300 mSec (120.00 Hz)
+dwFrameInterval[3]:          0x00028B0A = 16.666600 mSec (60.00 Hz)
+dwFrameInterval[4]:          0x00051615 = 33.333300 mSec (30.00 Hz)
+
+          ===>Color Matching Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x24
+bDescriptorSubtype:                0x0D
+bColorPrimaries:                   0x01
+bTransferCharacteristics:          0x01
+bMatrixCoefficients:               0x04
+
+          ===>Interface Descriptor<===
+bLength:                           0x09
+bDescriptorType:                   0x04
+bInterfaceNumber:                  0x01
+bAlternateSetting:                 0x01
+bNumEndpoints:                     0x01
+bInterfaceClass:                   0x0E  -> Video Interface Class
+bInterfaceSubClass:                0x02  -> Video Streaming Interface SubClass
+bInterfaceProtocol:                0x00
+iInterface:                        0x00
+
+          ===>Endpoint Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x05
+bEndpointAddress:                  0x81  -> Direction: IN - EndpointID: 1
+bmAttributes:                      0x05  -> Isochronous Transfer Type, Synchronization Type = Asynchronous, Usage Type = Data Endpoint
+wMaxPacketSize:                  0x0400
+bInterval:                         0x01
+
+ ===>SuperSpeed Endpoint Companion Descriptor<===
+bLength:                           0x06
+bDescriptorType:                   0x30
+bMaxBurst:                         0x0F
+bmAttributes:                      0x02 = 48 maximum number of packets within a service interval
+
+wBytesPerInterval:                 0xC000
+
+          ===>Additional Error Checking<===
+PASS: number of uncompressed-frame frame descriptors (3) == number of frame descriptors (3) specified in uncompressed format descriptor(s)
+
+          ===>BOS Descriptor<===
+bLength:                           0x05
+bDescriptorType:                   0x0F
+wTotalLength:                      0x0016
+bNumDeviceCaps:                    0x02
+
+          ===>USB 2.0 Extension Descriptor<===
+bLength:                           0x07
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x02
+bmAttributes:                      0x00000002  -> Supports Link Power Management protocol
+
+          ===>SuperSpeed USB Device Capability Descriptor<===
+bLength:                           0x0A
+bDescriptorType:                   0x10
+bDevCapabilityType:                0x03
+bmAttributes:                      0x00
+wSpeedsSupported:                  0x0C
+  -> Supports high-speed operation
+  -> Supports SuperSpeed operation
+bFunctionalitySupport:             0x02 -> lowest speed = high-speed
+bU1DevExitLat:                     0x0A -> less than 10 micro-seconds
+wU2DevExitLat:                     0x0020 -> less than 32 micro-seconds
+				</code></pre>
+				<br>
+				<h2>Windows 10 Camera application</h2>
+				<p>Usb Camera-OV580 device is Windows Media Framework compatible so native Camera application can be used directly on Windows 10.
+					<div class="center">
+						<img src="assets/CameraWin10.jpg">
+					</div>
+				</p>
+				<p>
+				But what happen, why is it showed in this way? Relax follow reading :P
+				</p>
+				<br>
+				<h2>Camera Frame Data Format</h2>
+
+				
+				<p> Well i already shared information about it in 2015, look at Video Streaming Uncompressed Frame Type Descriptors and we can get these modes
+				</p>
+				<br>
+				<style type="text/css">
+				.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;margin-left: auto;margin-right: auto;}
+				.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}
+				.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD;}
+				.tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top;}
+				</style>
+				<table class="tg">
+				  <tr>
+				    <th class="tg-c3ow">frameIdex</th>
+				    <th class="tg-c3ow">wWidth</th>
+				    <th class="tg-c3ow">wHeight</th>
+				    <th class="tg-c3ow">fps</th>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1</td>
+				    <td class="tg-c3ow">3448</td>
+				    <td class="tg-c3ow">808</td>
+				    <td class="tg-c3ow">60</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1</td>
+				    <td class="tg-c3ow">3448</td>
+				    <td class="tg-c3ow">808</td>
+				    <td class="tg-c3ow">30</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">1</td>
+				    <td class="tg-c3ow">3448</td>
+				    <td class="tg-c3ow">808</td>
+				    <td class="tg-c3ow">15</td>
+				  </tr>
+				   <tr>
+				    <td class="tg-c3ow">1</td>
+				    <td class="tg-c3ow">3448</td>
+				    <td class="tg-c3ow">808</td>
+				    <td class="tg-c3ow">8</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">2</td>
+				    <td class="tg-c3ow">1748</td>
+				    <td class="tg-c3ow">408</td>>
+				    <td class="tg-c3ow">120</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">2</td>
+				    <td class="tg-c3ow">1748</td>
+				    <td class="tg-c3ow">408</td>>
+				    <td class="tg-c3ow">60</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">2</td>
+				    <td class="tg-c3ow">1748</td>
+				    <td class="tg-c3ow">408</td>>
+				    <td class="tg-c3ow">30</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">2</td>
+				    <td class="tg-c3ow">1748</td>
+				    <td class="tg-c3ow">408</td>>
+				    <td class="tg-c3ow">15</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">2</td>
+				    <td class="tg-c3ow">1748</td>
+				    <td class="tg-c3ow">408</td>>
+				    <td class="tg-c3ow">8</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">3</td>
+				    <td class="tg-c3ow">898</td>
+				    <td class="tg-c3ow">200</td>>
+				    <td class="tg-c3ow">240</td>
+				  </tr>
+				   <tr>
+				    <td class="tg-c3ow">3</td>
+				    <td class="tg-c3ow">898</td>
+				    <td class="tg-c3ow">200</td>>
+				    <td class="tg-c3ow">120</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">3</td>
+				    <td class="tg-c3ow">898</td>
+				    <td class="tg-c3ow">200</td>>
+				    <td class="tg-c3ow">60</td>
+				  </tr>
+				  <tr>
+				    <td class="tg-c3ow">3</td>
+				    <td class="tg-c3ow">898</td>
+				    <td class="tg-c3ow">200</td>>
+				    <td class="tg-c3ow">30</td>
+				  </tr>
+				</table>
+				<br>
+				<p> Default mode is 1280x800 60 FPS, but it is important that you understand the format:
+				</p>
+				<p>
+					<div class="center">
+						<img src="assets/frameDataFormat.png">
+					</div>
+				</p>
+				<p>
+					3448*2 bytes in each line and 800 lines although device will extend it to 808, we can discard that extra 8 lines for video.
+				<p>
+					Windows Camera application believes that all is a valid and unique video frame but you can see that it is not all video.
+				</p>
+				<p> So vertical green bars in Windows Camera Application are 32 bytes of header and 64 bytes for audio and when application is reading that information, it is tryng to display that as is so video convert algorhithm is displaying all in a nice green color :p. I told you already in 2015...
+				</p>
+				<p>
+					You can see next in each line 1280*2 bytes for left sensor and 1280*2 bytes for right sensor displayed fine in app. It is using YUY2 format so Windows Video Media Framework is making the job fine.
+				</p>
+				<p>
+					Windows Camera app believes also that next data in the line it is video too. It is, but it is not all in the same line so conversion is wrong :P and you will see video from different resolutions mixed. That is ugly :P.
+				</p>
+				<p> 
+					There is 3 video frames(2 frames in each resolution) with different scale after default 1280x2x2 bytes. I will try to explain each one.
+				</p>
+				<p>
+					High is for frames using 640x400*2 resolution. It is distributed in 2 frames but it is not in the same line. Left frame has first 320*2 bytes in line 1 and the second 320*2 bytes in line 0. Right frame is after left frame with the same format 320*2 first bytes in line 1 and second 320*2 bytes in line 0 in main frame. Easy and fun don't you?
+				</p>
+				<p>
+					Next frame Medium for frames using 320x200*2. It is is distributed in 2 frames but is not in the same line. Left frame has a distribution using first 80*2 bytes in line 3, second 80*2 bytes in line 2, third 80*2 bytes in line 1 and fourth 80*2 bytes in line 0. All together is the first line for left frame in this resolution. Right frame is the same but with the second 80*2 bytes in main frame.
+				</p>
+				<p> 
+					Finally Low for frames using 160x100*2 resolution. Each line of these frames are distributed in 8 lines of the main frame. So left frame has first 20*2 bytes in line 7 until last 20*2 bytes in line 0 of the main frame. Right frame is using the same distrubution.
+				</p>
+
+				<a href="https://gist.github.com/psxdev/20cc8a3a1b1f33d2271a85d59c529083">Here</a> it is a code to extract all types of frames from the raw frame captured from the device, using Windows Video Media Framework Api.
+
+				<br>
+				
+				<br>
+
+				<h2>Conclusion</h2>
+
+				<p> I wait that with this information researchers can do cool things with this device. It is important that they understand first the data format. 
+				</p>
+				<p> Windows Media Framework is enough to get raw frames and then plain code without external libraries like opencv or others to get each kind of frame so they can use what they need to play with this device.
+				</p>
+
+				<p>You can get in each frame captured:
+				</p>
+				<ul>
+					<li>4 channels of audio</li>
+					<li>2 frames(left/right) of 1280x800</li>
+					<li>2 frames(left/right) of 640x400</li>
+					<li>2 frames(left/right) of 320x200</li>
+					<li>2 frames(left/right) of 160x100</li>
+				</ul>
+				<br>
+				<p>Not bad :P. You know, Sony and its crazy formats. A lot of fun reversing and a big pleasure for me doing it always :). Without challenge there is not fun at all. 
+				</p>
+				<p>No PlayStation Cameras were harmed in the making of these articles :P
+				</p>
+				<br>
+				<h2>Thanks</h2>
+				<ul>
+					<li>Sony for this incredible device, perhaps they could publish a custom driver in the future...</li>
+					<li>My sponsor to provide me a windows machine to do all this things. 
+					<li>Guido Sanchez HipsterSloth and Jules Block Armada651 who have been working on PS4EyeCam support for windows and PlayStation VR stuff lately.</li>
+					<li>zecoxao, z80 and CelesteBlue for sharing with me some kernel stuff for Luke firmware extraction.</li>
+					<li>z80, wildcard, flatz, alexaltea and all guys on discord who have been working on kernel land.</li>
+					<li>jldiez, alvaroprieto aux to usb3 masters.
+					<li>hitodama ps4sdk master,</li>
+					<li>masterzorag liborbis partner :P.</li>
+				</ul>
+			</div>
+		</div>
+
+		<script src="js/prism.js" type="text/javascript"></script>
+	</body>
+</html>
