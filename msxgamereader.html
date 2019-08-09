@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/core.css" />
+		<link rel="stylesheet" type="text/css" href="css/prism.css" />
+		<title>MSX GAME READER</title>
+	</head>
+	
+	<body>
+		<div class="page">
+			<div class="container">
+				<div class="header">
+					<a href="about.html" class="header-element">
+						About me
+					</a>
+					
+					<a href="stuff.html" class="header-element">
+						Stuff
+					</a>
+					
+					<a href="index.html" class="header-element">
+						Home
+					</a>
+				</div>
+				
+				<h1>MSX GAME READER</h1>
+				<h2>Give to your MSX Cartridges a new life</h2>
+				
+				
+				<br>
+				
+				<h2>Brief History</h2>
+				
+				<p>
+					MSX GAME READER was a device released in 2004 in Japan by ASCII. It was a MSX cartridge reader with an usb
+					interface to connect it to Windows XP/Windows 2000 and use it with MSX emulator called MSXPlayer. Sunrise released a clon in Europe with the same features.
+				</p>
+				<p>
+					MSXPLAYER and the driver for MSX GAME READER had some problems:
+					<ul>
+					<li>No open source</li>
+					<li>Emulator was not very good</li>
+					<li>Driver for MSX GAME READER was only for 32 bits Windows XP/2000</li>
+					</ul>
+				</p>
+
+				<p>
+					BlueMsx emulator gave support for this device for Windows XP/2000 using some dll from original driver, so it has the same problems. Also some dumper code was released but you need to say what kind of cartridge and mapper to dump each one, and it is using the original dll from the original driver so the same problem again.
+				</p>
+				<p>
+					Some additional info from <a href="https://www.msx.org/wiki/ASCII_MSX_Game_Reader">msx.org wiki</a>
+				</p>
+				<h2>Reversing MSX GAME READER device</h2>
+				<p>
+					Steps for reversing:
+					<ul>
+					<li>Get the device.</li>
+					<li>Get USB traffic.</li>
+					<li>Reverse driver decompiling code and using USB traffic dump to check.</li>
+					<li>Open source implemention multiplatform.</li>
+					<li>Add PlayStation support with new MSX Orbis Infinity.</li>
+					</ul>
+				</p>
+				<h2>Get the device</h2>
+				<p>
+					I got the device from Japan last August 6th.
+				</p>
+					<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Time to port to PlayStation :P <a href="http://t.co/rVE9SEbf4x"></a>
+</p>&mdash; psxdev (@psxdev) <a href="https://twitter.com/psxdev/status/1158653777785827328">August 6, 2019</a></blockquote>	
+					<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+				
+				
+				
+				<h2>Get USB traffic</h2>
+				<p>
+					Using a virtualbox Windows XP guest and an usb sniffer(a trial version from usblyzer for example), we can dump a working session loading cartridges. We will use it later to understand how the magic is done :P
+					<ul>
+					<li><a href="metalgear.html">Loading original METALGEAR cartridge from Konami 1987</a></li>
+					<li><a href="nightknight.html">Loading original Night Knight cartridge from @reidrac 2019</a></li>
+					</ul>
+				</p>
+				<h2>Reverse driver decompiling code and using USB traffic dump to check</h2>
+				<p>
+					Original driver is done using WINDRIVER WINDRVR6 libraries from <a href="http://jungo.com">Jungo</a>
+				</p>
+				<p>
+					There are 2 dlls interesting for our job. Ghidra or IDA can help you in this task.
+					<ul>
+					<li>MSXGR.dll from driver. It has all the usb integration with WINDRIVER</li>
+					<li>GrDriver.dll fron MSXPLAYER it has very interesting functions to speak with MSXGR.dll exports</li>
+					</ul>
+				</p>
+				<p>
+					First traces, until 12 usb sequence, are initializing driver basic stuff. Then AnalyzeRomType is called from GrDriver.dll. This function try to get what kind of mapper has the cartridge using MSXGR_WriteMemory and MSXGR_ReadMemory functions. These 2 functions are in MSXGR.dll and they speak directly with device sending/receiving a control transfer (read or write address and size) and a bulk transfer to send and receive the data. You can follow very well the usb traffic with decompiled code from this function. 
+
+				</p>
+				<p>We will come back when job is finished. Source code will be available for all free of charge in open source way. So by now Work in progress...
+				</p>
+				<h2>Open source implemention unix/windows</h2>
+				<p>
+					WIP...
+				</p>
+				<h2>Add PlayStation support with new MSX Orbis Infinity</h2> 
+				<p>
+					TODO
+				</p>
+
+				<br>
+				<h2>Thanks</h2> 
+				<p>
+					<ul>
+					<li>Msx User Group from Sevilla they will test new stuff in next RU i hope...</li>
+					<li>ASCII and Mr. Nishi to bring us the MSX standard</li>
+					</ul>
+				</p>
+				
+		<script src="js/prism.js" type="text/javascript"></script>
+	</body>
+</html>
