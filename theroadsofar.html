@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/core.css" />
+		<link rel="stylesheet" type="text/css" href="css/prism.css" />
+		<title>The road so far... A long journey</title>
+	</head>
+	
+	<body>
+		<div class="page">
+			<div class="container">
+				<div class="header">
+					<a href="about.html" class="header-element">
+						About me
+					</a>
+					
+					<a href="stuff.html" class="header-element">
+						Stuff
+					</a>
+					
+					<a href="index.html" class="header-element">
+						Home
+					</a>
+				</div>
+				
+				<h1>The road so far... A long journey</h1>
+				<h2>Orbis development</h2>
+				
+				<hr>
+				
+				<p> 
+					If you want piracy, stop here buy originals.
+				</p>
+				<p>
+					<b>Note</b>: Other articles:
+				</p>
+				
+				<ul>
+					<li><b><a href="luke.html">Luke No... I am PlayStation Camera, part 1 - Introduction to PlayStation Camera</a></b></li>
+					<li><b><a href="luke2.html">Luke No... I am PlayStation Camera, part 2</a></b></li>
+					<li><b><a href="itisalive.html">Fuse is Alive!!!! on PlayStation 4 Retail</a></b></li>
+				</ul>
+				
+				<p>
+					See also for historical purposes. All was done at that time in user land, and with usb traffic sniffer:
+					<ul>
+						<li> <a href="http://bigboss-eyetoy.blogspot.com/2015/02/reversing-playstation-4-camera.html"> Reversing PlayStation 4 Camera</a></li>
+						<li> <a href="http://bigboss-eyetoy.blogspot.com/2015/08/reversing-scelibcamera.html">Reversing sceLibCamera </a></li>
+					</ul>
+						
+				</p>
+				
+				<br>
+				
+				<h2>Brief History</h2>
+				
+				<p>
+					I began my research on PlayStation 4 with PlayStation Camera in 2013. All done on macos side without PlayStation 4 user execution code publically available at that time. I was porting fMSX emulator to PlayStation Vita using a port from psp by Akop Karapetyan in parallel with PlayStation 4 research.
+				</p>
+
+				<p> 
+					After that the first user's land webkit exploit was released around July 2015. The 
+					Ps4-playground allowed us, initially, to make memory dump of sprx modules loaded on PlayStation 4 user's process. I used that to get camera stuff done on that limited environment with the PS4-SDK from @CTurt. Cool don't you? <a href="https://www.youtube.com/watch?v=x9PSi7212qk">PlayStation 4 homebrew execution PlayStation 4 Camera POC</a>
+				</p>
+				<p>
+					The PS4-SDK had many limitations, it was payload oriented and gcc based, and binary payload loader was a real pain in the ass, and with camera plug in, it was a real mess with default load address used xD. 
+				</p>
+				<p>
+					Hitodama began work in libps4 around November 2015 evolving to PS4SDK. Finally a proper sdk with elf generation features. So i decided to switch to Hitodama's PS4SDK because it was better option for what i was developing. I created ps4link a set of libraries based in old stuff that we used in the past in ps2/psp/ps3 to get host file system and elf loader features. I was making some camera stuff too and to get frames saved in a easy way from PlayStation 4, ps4link's remote file system features was the best option and loading my code in elf format with commands from ps4sh was much better and easy than that fucking binary payloads. So ps4link/debugnet/ps4sh were the tools in that time to work in proper way for me.
+
+				<p>	
+					Switch to clang and gnu freebsd cross compiling binutils for linker was the next right choice. This generation has the best compiler directly from Sony using the same llvm code released by Sony in llvm/clang master branch. So we had a proper toolchain using clang and we were generating freebsd/ps4 valid elf non signed code that we can load in PlayStation 4. This was done in January 2016 switching ps4liink to clang.
+				</p>
+				<p>
+					 Kernel exploit information for 1.76 was available on december 2015 by CTurt and others and finally on April 2016 we had kernel execution on 1.76. Hitodama made a very good job to incoporate kernel land features on PS4SDK so it was a very fun time learning new things about PlayStation 4 internal architecture. 
+				</p>
+					 We had lack of graphics a many other things so i began to work in liborbis, a set of little libraries to get my fMSX port for PlayStation 4 done. We got a method to load elfs generated with Hitodama's PS4SDK and liborbis with PlayRoom game, so finally we use it to load elf plain code generated with clang and liborbis with pad, audio, basic framebuffer and remote file system. Finally the initial graphic elf using liborbis2d was published all build with open source toolchain based on clang and gnu binutils and open source sdk!!!
+
+					<center><blockquote class="twitter-tweet"><p lang="en" dir="ltr">No comments :P <a href="https://t.co/qxGEbwmVSm">pic.twitter.com/qxGEbwmVSm</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/913527364679880704?ref_src=twsrc%5Etfw">September 28, 2017</a></blockquote></center> 
+				</p>
+				<p>
+					After that fMSX port source was released and published on december 25th all done with open source toolchain and open source PS4SDK with liborbis for firmware 1.76.
+
+					<center><blockquote class="twitter-tweet"><p lang="en" dir="ltr">[Release] fMSX port for PlayStation 4 with liborbis <a href="https://t.co/5O2wTKuuNE">https://t.co/5O2wTKuuNE</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/945177288991272964?ref_src=twsrc%5Etfw">December 25, 2017</a></blockquote> </center>
+
+					<center><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Msx Emulator for PlayStation 4 based on fmsx using liborbis is almost finished :) . All assets are loaded from host. <a href="https://t.co/kZT1LWNSrL">pic.twitter.com/kZT1LWNSrL</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/934577985809780739?ref_src=twsrc%5Etfw">November 26, 2017</a></blockquote> </center>
+				</p>
+				<p> 
+					Later @flatz released pkg installer,the <a href="https://github.com/flatz/ps4_stub_lib_maker_v2">tauon</a> and <a href="https://github.com/flatz/ps4_gl_test">gl es stuff</a> with piglet:
+					<center><blockquote class="twitter-tweet"><p lang="fr" dir="ltr">opengl es on ps4 : <a href="https://t.co/mC8rpkM6nv">https://t.co/mC8rpkM6nv</a></p>&mdash; Alexey Kulaev (@flat_z) <a href="https://twitter.com/flat_z/status/1071895374191824896?ref_src=twsrc%5Etfw">December 9, 2018</a></blockquote>
+					</center>
+				</p>
+				<p>
+					I wrote orbisgl library incorporating to liborbis and PS4SDK for 5.05 firmware. We had only one problem, orbislink was the loader to load plain elfs but there was not open solution available to build the pkg and orbislink. Tauon was used for that so that was a problem to publish it, i didn't release the pkg for that reason, but all elfs build with Hitodama's PS4SDK were plain freebsd ps4 compliant elf. However they couldn't run directly in PlayStation without a proper loader. Orbislink is reading from host the homebrew.elf. Elf was done with open tools and load it in memory and jump to the entry in its own thread, like we are done in the past on other PlayStation consoles.
+				</p>
+				<p>
+					After that I released source for <a href="https://github.com/orbisdev/orbisGlPerf">orbisGlPerf</a> porting from raspberry pi code done by <a href="https://www.bigmessowires.com/about/">Steve Chamberlin </a>
+
+					<center><blockquote class="twitter-tweet"><p lang="de" dir="ltr">An video of orbisGlPerf <a href="https://t.co/PiORIOMxeK">pic.twitter.com/PiORIOMxeK</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1077271049589440512?ref_src=twsrc%5Etfw">December 24, 2018</a></blockquote></center>
+				</p>
+				<p>
+					With a gl backend @frangar and me were working in libretro with liborbis incorporating changes to retroarch master branch.
+					<center>
+					<blockquote class="twitter-tweet"><p lang="und" dir="ltr"><a href="https://t.co/vUjIMCdDPJ">pic.twitter.com/vUjIMCdDPJ</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1080465424343535617?ref_src=twsrc%5Etfw">January 2, 2019</a>
+					</center>
+					
+					<center>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr">A lot of fun tryng to figure out the problem. Thanks to <a href="https://twitter.com/frangar?ref_src=twsrc%5Etfw">@frangar</a> fixed ugly bug Sameboy core on PlayStation 4 <a href="https://twitter.com/hashtag/liborbis?src=hash&amp;ref_src=twsrc%5Etfw">#liborbis</a> <a href="https://twitter.com/hashtag/retroarch?src=hash&amp;ref_src=twsrc%5Etfw">#retroarch</a> <a href="https://t.co/Y6J0EJ8YVq">pic.twitter.com/Y6J0EJ8YVq</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1081664137841856514?ref_src=twsrc%5Etfw">January 5, 2019</a></blockquote> 
+					</center>
+					<center>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Pokemon on Sameboy core <a href="https://t.co/mxZdw4h5Iy">pic.twitter.com/mxZdw4h5Iy</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1081672185889153025?ref_src=twsrc%5Etfw">January 5, 2019</a></blockquote> 
+					</center>
+				</p>
+				<p>
+					A new msx port was released, the <a href="https://github.com/psxdev/msxorbis">msxorbis</a> a bluemsx port for PlayStation 4. It was presented in Sevilla in <a href="msxorbis.html">MSX RU06 May 18th 2019, check the video at the end of link (in spanish sorry)</a>
+				</p>
+
+				<p> 
+					Later in 2019 <a href="itisalive.html">article</a> about fuse on retail and <a href="https://github.com/orbisdev/liborbis/tree/master/liborbisNfs">liborbisNfs</a> was released 
+				</p>
+				<p>
+					And for my birthday something special a modern graphic backend was needed so i choose to port <a href="https://www.raylib.com/">raylib</a> to PlayStation 4 and orbisGl2 was released.
+
+					<center><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Release time!!!! <a href="https://twitter.com/hashtag/orbisGl2?src=hash&amp;ref_src=twsrc%5Etfw">#orbisGl2</a> based on <a href="https://twitter.com/hashtag/raylib?src=hash&amp;ref_src=twsrc%5Etfw">#raylib</a> 3.0 for <a href="https://twitter.com/hashtag/liborbis?src=hash&amp;ref_src=twsrc%5Etfw">#liborbis</a> PlayStation 4 <a href="https://twitter.com/hashtag/homebrew?src=hash&amp;ref_src=twsrc%5Etfw">#homebrew</a> <a href="https://t.co/skzgM7fFAX">https://t.co/skzgM7fFAX</a> thanks to <a href="https://twitter.com/raysan5?ref_src=twsrc%5Etfw">@raysan5</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1245033738880405509?ref_src=twsrc%5Etfw">March 31, 2020</a></blockquote>
+				</center>
+				<center>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Almost here :P <a href="https://twitter.com/hashtag/raylib?src=hash&amp;ref_src=twsrc%5Etfw">#raylib</a> <a href="https://twitter.com/hashtag/liborbis?src=hash&amp;ref_src=twsrc%5Etfw">#liborbis</a> <a href="https://twitter.com/hashtag/homebrew?src=hash&amp;ref_src=twsrc%5Etfw">#homebrew</a> for PlayStation 4 <a href="https://t.co/5MoZp0Z3ay">pic.twitter.com/5MoZp0Z3ay</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1244767926571409413?ref_src=twsrc%5Etfw">March 30, 2020</a></blockquote> 
+				</center>
+				<center>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr"><a href="https://twitter.com/raysan5?ref_src=twsrc%5Etfw">@raysan5</a> orbisGl2 library a <a href="https://twitter.com/hashtag/raylib?src=hash&amp;ref_src=twsrc%5Etfw">#raylib</a> port for <a href="https://twitter.com/hashtag/liborbis?src=hash&amp;ref_src=twsrc%5Etfw">#liborbis</a> <a href="https://twitter.com/hashtag/hombrew?src=hash&amp;ref_src=twsrc%5Etfw">#hombrew</a> for PlayStation 4 is almost here with basic samples for textures,shapes,text,models... and spine port based on work from <a href="https://twitter.com/WEREMSOFT?ref_src=twsrc%5Etfw">@WEREMSOFT</a> <a href="https://t.co/MctrI7Bqgb">pic.twitter.com/MctrI7Bqgb</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1244390940648841219?ref_src=twsrc%5Etfw">March 29, 2020</a></blockquote> 
+				</center>
+				<center>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr"><a href="https://twitter.com/hashtag/madewithspine?src=hash&amp;ref_src=twsrc%5Etfw">#madewithspine</a> <a href="https://twitter.com/hashtag/liborbis?src=hash&amp;ref_src=twsrc%5Etfw">#liborbis</a> <a href="https://twitter.com/hashtag/raylib?src=hash&amp;ref_src=twsrc%5Etfw">#raylib</a> <a href="https://twitter.com/hashtag/homebrew?src=hash&amp;ref_src=twsrc%5Etfw">#homebrew</a> spineboy :) <a href="https://t.co/Y1JuBkxoGV">pic.twitter.com/Y1JuBkxoGV</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1241080129805340673?ref_src=twsrc%5Etfw">March 20, 2020</a></blockquote> 
+				</center>
+				</p>
+				
+				<p>After orbisgl2 was released and in the middle of Covid pandemic @frangar,@fjtrujy,@masterzorag and me decided to make our own tool to generate sony compliant self using lief and a custom tool to generate all stub. Finally our own tools in open source way were done 
+
+				<center>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr">20/04/2020 to 23/05/2020 <a href="https://twitter.com/frangar?ref_src=twsrc%5Etfw">@frangar</a> <a href="https://twitter.com/fjtrujy?ref_src=twsrc%5Etfw">@fjtrujy</a> <a href="https://twitter.com/masterzorag?ref_src=twsrc%5Etfw">@masterzorag</a> thank you for all your help these days !!! <a href="https://twitter.com/hashtag/orbisdev?src=hash&amp;ref_src=twsrc%5Etfw">#orbisdev</a></p>&mdash; bigboss (@psxdev) <a href="https://twitter.com/psxdev/status/1264246507538190338?ref_src=twsrc%5Etfw">May 23, 2020</a></blockquote> 
+				</center>
+				</p>
+
+				<h2>New orbisdev sdk a new hope :P</h2>
+
+				<p>
+					Finally July 13th my name day San Antonio orbisdev team(@frangar,@fjtrujy,@masterzorag and me) bring to developers:
+					<ul>
+					<li><b><a href="https://github.com/orbisdev/orbisdev-orbislink">Orbislink GL NFS SE a system app with self loader features build all from open source tools</a></b></li>
+					<li><b><a href="https://github.com/orbisdev/orbisdev-liborbis">liborbis for new sdk</a></b></li>
+					<li><b><a href="https://github.com/orbisdev/orbisdev-orbisGl2">orbisGl2 raylib graphic backend for new sdk</a></b></li>
+					<li><b><a href="https://github.com/orbisdev/orbisdev-orbisGl">orbisGl old graphic backend for new sdk</a></b></li>
+					<li><b><a href="https://github.com/orbisdev/orbisdev-headers">headers for new sdk</a></b></li>
+					<li><b><a href="https://github.com/orbisdev/orbisdev-sysroot">new sdk builder</a></b></li>
+					<li><b><a href="https://github.com/orbisdev/LIEF/tree/WIP">orbis-elf-create tool</a></b></li>
+					<li><b>@flatz signing tool and @maxton pkg builder</a></b></li>
+				</ul> 
+
+				<br>
+					A lot of fun for devs
+				</p>
+	
+				<h2>Thanks</h2>
+				<ul>
+					<li>@hitodama ps4sdk master</li>
+					<li>@masterzorag, @frangar and @fjtrujy orbisdev partners aka "los nenes"</li>
+					<li>@cturt and all people involved in the first steps on PlayStation 4 reverse engineering</li>
+					<li>@flatz for fself signing, patching and gl stuff a lot of fun thanks to him!!!!</li>
+					<li>@maxtom for liborbispkg tool to create valid pkg</li>
+					<li>@z80, @droogie , @zecoxao, @wildcard, @shadowdancer fun times guys all these years :P</li>
+					<li>all ps3dev and ps2dev all comrades</li>
+					<li>openorbis team thanks to make us finish this, we didn't think in do our own tools 2 months ago. Congrats for all your work</li>
+					<li>paella and msx time PlayStation 5 is waiting proper msx support!!!! ;P</li>
+				</ul>
+			</div>
+		</div>
+
+		<script src="js/prism.js" type="text/javascript"></script>
+	</body>
+</html>
